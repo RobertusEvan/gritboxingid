@@ -1,0 +1,14 @@
+# Dependency backend
+backend/node_modules/
+
+# Data rahasia
+backend/.env
+.env
+
+# Log
+*.log
+
+# File editor dan OS
+.vscode/
+.DS_Store
+Thumbs.db
