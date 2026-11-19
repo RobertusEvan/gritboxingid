@@ -1,5 +1,7 @@
 # Dependency backend
 backend/node_modules/
+node_modules/
+public/
 
 # Data rahasia
 backend/.env

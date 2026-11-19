@@ -1,4 +1,7 @@
-const API_URL = "http://localhost:3000";
+const API_URL =
+  typeof window.GRIT_API_URL === "string"
+    ? window.GRIT_API_URL
+    : "http://localhost:3000";
 const ticketsById = new Map();
 let snapLoadPromise;
 let ticketSalesOpen = false;
@@ -345,8 +348,8 @@ async function loadTicketCategories() {
         <strong>Data tiket gagal dimuat.</strong>
 
         <p>
-          Pastikan backend berjalan di
-          <code>http://localhost:3000</code>.
+          Periksa koneksi backend dan URL API di
+          <code>frontend/config.js</code>.
         </p>
 
         <button

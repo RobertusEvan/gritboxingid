@@ -36,9 +36,16 @@ mengirimkannya ke email pembeli.
 
    Backend menyiapkan tabel pesanan, pengaturan acara/tiket, dan tiket terbit
    saat mulai. Pastikan database dapat diakses.
-4. Sajikan folder `frontend` menggunakan Live Server atau web server statis,
-   lalu buka `index.html`. Dashboard admin tersedia di `admin.html`.
-   Frontend lokal memakai API `http://localhost:3000`.
+4. Dari folder project, jalankan `npm install`, lalu:
+
+   ```sh
+   npm start
+   ```
+
+   Buka `http://localhost:3000` untuk website dan
+   `http://localhost:3000/admin.html` untuk dashboard. Alternatifnya, sajikan
+   folder `frontend` dengan Live Server saat backend lokal berjalan. Pengaturan
+   API lokal ada di `frontend/config.js`.
 
 ## Mengelola acara dan tiket
 
@@ -63,13 +70,23 @@ ORDER BY created_at DESC
 LIMIT 20;
 ```
 
-Untuk produksi, atur `MIDTRANS_IS_PRODUCTION=true`, gunakan kredensial produksi,
-HTTPS, dan arahkan URL notifikasi Midtrans ke
-`https://<domain-api>/api/midtrans/webhook`. Jika frontend dan backend tidak
-berjalan lokal bersama, ubah `API_URL` di `frontend/script.js` dan
-`frontend/admin.js` ke URL API yang benar. Midtrans tidak dapat mengakses
-`localhost`; untuk pengujian lokal gunakan URL publik sementara/tunnel atau
-server backend yang dapat diakses dari internet.
+## Deploy di Vercel
+
+Project ini mengekspos Express sebagai Vercel Function dan menyajikan frontend
+dari project yang sama. Pada Vercel, atur Root Directory ke root repository
+(`.` atau kosong, bukan `frontend`), Build Command ke `npm run build`, dan
+biarkan Output Directory kosong. Build menyalin frontend serta gambar ke
+`public/` agar dilayani oleh CDN Vercel. Lalu deploy ulang. Tambahkan
+environment variables dari `backend/.env` melalui **Project Settings →
+Environment Variables**; jangan commit `.env`. Setelah deployment, website dan
+admin berjalan pada domain Vercel yang sama, dan `frontend/config.js`
+otomatis memakai API same-origin. Health check tersedia di `/api/health`.
+
+Atur URL Payment Notification Midtrans ke
+`https://<domain-vercel>/api/midtrans/webhook`. Midtrans tidak dapat mengakses
+`localhost`. Untuk Sandbox, gunakan Midtrans Sandbox Server Key/Client Key dan
+`MIDTRANS_IS_PRODUCTION=false`; jangan pernah mengirim secret melalui chat.
+Periksa kuota paket Vercel dan biaya transaksi Midtrans sebelum penjualan live.
 
 Pastikan pengirim mengizinkan autentikasi SMTP dan alamat `SMTP_USER` dapat
 digunakan sebagai alamat pengirim. Email tiket hanya dikirim setelah notifikasi

@@ -1,4 +1,7 @@
-const API_URL = "http://localhost:3000";
+const API_URL =
+  typeof window.GRIT_API_URL === "string"
+    ? window.GRIT_API_URL
+    : "http://localhost:3000";
 const ADMIN_TOKEN_KEY = "gritAdminToken";
 
 const loginView = document.querySelector("#adminLoginView");
