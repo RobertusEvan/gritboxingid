@@ -710,6 +710,29 @@ h2 {
   font-weight: 650;
 }
 
+.payment-page-status {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.payment-page-status.is-error {
+  border-color: #e4c2bd;
+  color: var(--danger);
+  background: #fff8f6;
+}
+
+.payment-page-status.is-success {
+  border-color: #b6d8c6;
+  color: var(--success);
+  background: var(--success-bg);
+}
+
 .ticket-category {
   margin-bottom: 46px;
 }

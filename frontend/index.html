@@ -309,6 +309,7 @@
         </div>
 
         <p class="ticket-sales-notice" id="ticketSalesNotice" hidden></p>
+        <p class="payment-page-status" id="paymentPageStatus" aria-live="polite" hidden></p>
 
         <div id="ticketCategories">
           <div class="loading-state">
@@ -341,13 +342,14 @@
               pertandingan GRIT Boxing.
             </p>
 
-            <button
-              class="btn btn-dark modal-trigger"
-              data-type="petinju"
-              type="button"
+            <a
+              class="btn btn-dark"
+              href="https://wa.me/6285183207150?text=Halo%20GRIT%20Boxing%2C%20saya%20ingin%20mendaftar%20sebagai%20fighter."
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Daftar sebagai Fighter
-            </button>
+            </a>
           </div>
         </article>
 
@@ -362,13 +364,14 @@
               olahraga tinju.
             </p>
 
-            <button
-              class="btn btn-dark modal-trigger"
-              data-type="mitra"
-              type="button"
+            <a
+              class="btn btn-dark"
+              href="https://wa.me/6285183207150?text=Halo%20GRIT%20Boxing%2C%20saya%20ingin%20menghubungi%20untuk%20kerja%20sama%20vendor%20atau%20sponsor."
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Hubungi Kami
-            </button>
+            </a>
           </div>
         </article>
       </div>
@@ -402,7 +405,16 @@
       <h3>Kontak Kami</h3>
       <p>Instagram: @gritboxingid</p>
       <p>Email: isi-email-resmi@contoh.com</p>
-      <p>WhatsApp: isi nomor panitia</p>
+      <p>
+        WhatsApp:
+        <a
+          href="https://wa.me/6285183207150"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          +62 851-8320-7150
+        </a>
+      </p>
     </div>
 
     <div>
@@ -481,66 +493,6 @@
       <small class="checkout-disclaimer">
         Kode tiket dikirim ke email setelah pembayaran berhasil dikonfirmasi.
       </small>
-    </form>
-  </dialog>
-
-  <!-- CONTACT DIALOG -->
-  <dialog id="contactDialog">
-    <form method="dialog" class="dialog-card">
-      <button
-        class="close"
-        value="cancel"
-        aria-label="Tutup"
-      >
-        ×
-      </button>
-
-      <h2 id="dialogTitle">Form Kontak</h2>
-
-      <label>
-        Nama
-
-        <input
-          id="nameInput"
-          required
-          maxlength="60"
-        >
-      </label>
-
-      <label>
-        Nomor WhatsApp
-
-        <input
-          id="phoneInput"
-          inputmode="tel"
-          required
-          maxlength="20"
-        >
-      </label>
-
-      <label>
-        Pesan
-
-        <textarea
-          id="messageInput"
-          rows="4"
-          maxlength="300"
-        ></textarea>
-      </label>
-
-      <p
-        class="form-note"
-        id="formStatus"
-        aria-live="polite"
-      ></p>
-
-      <button
-        class="btn btn-dark"
-        id="submitForm"
-        type="button"
-      >
-        Simpan Data
-      </button>
     </form>
   </dialog>
 

@@ -403,6 +403,8 @@ function activateTicketButtons() {
       document.querySelector("#checkoutTicketPrice").textContent =
         formatRupiah(ticket.price);
       document.querySelector("#checkoutStatus").textContent = "";
+      paymentPageStatus.hidden = true;
+      paymentPageStatus.textContent = "";
       checkoutDialog.showModal();
     });
   });
@@ -446,6 +448,24 @@ const checkoutDialog =
   document.querySelector("#checkoutDialog");
 const checkoutClose =
   document.querySelector("#checkoutClose");
+const paymentPageStatus =
+  document.querySelector("#paymentPageStatus");
+
+function showPaymentPageStatus(message, status = "") {
+  if (!paymentPageStatus) {
+    return;
+  }
+  paymentPageStatus.textContent = message;
+  paymentPageStatus.className = "payment-page-status";
+  if (status) {
+    paymentPageStatus.classList.add(`is-${status}`);
+  }
+  paymentPageStatus.hidden = false;
+  paymentPageStatus.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
+}
 
 if (checkoutDialog && checkoutClose) {
   checkoutClose.addEventListener("click", () => {
@@ -492,28 +512,39 @@ if (checkoutForm) {
         throw new Error("Komponen pembayaran Midtrans tidak tersedia.");
       }
 
-      status.textContent = "Silakan selesaikan pembayaran di Midtrans.";
+      checkoutDialog.close();
+      showPaymentPageStatus("Silakan selesaikan pembayaran di Midtrans.");
       window.snap.pay(result.token, {
         onSuccess: () => {
-          status.textContent =
-            "Pembayaran berhasil. Kode tiket akan dikirim ke email setelah dikonfirmasi Midtrans.";
+          showPaymentPageStatus(
+            "Pembayaran berhasil. Kode tiket akan dikirim ke email setelah dikonfirmasi Midtrans.",
+            "success"
+          );
         },
         onPending: () => {
-          status.textContent =
-            "Pembayaran menunggu konfirmasi Midtrans.";
+          showPaymentPageStatus(
+            "Pembayaran menunggu konfirmasi Midtrans."
+          );
         },
         onError: () => {
-          status.textContent =
-            "Pembayaran gagal. Silakan coba kembali.";
+          showPaymentPageStatus(
+            "Pembayaran gagal. Silakan coba kembali.",
+            "error"
+          );
         },
         onClose: () => {
-          status.textContent =
-            "Jendela pembayaran ditutup. Jika pembayaran sudah dilakukan, tunggu konfirmasi email.";
+          showPaymentPageStatus(
+            "Jendela pembayaran ditutup. Jika pembayaran sudah dilakukan, tunggu konfirmasi email."
+          );
         }
       });
     } catch (error) {
       console.error("Checkout gagal:", error);
-      status.textContent = error.message;
+      if (checkoutDialog.open) {
+        status.textContent = error.message;
+      } else {
+        showPaymentPageStatus(error.message, "error");
+      }
     } finally {
       submitButton.disabled = false;
     }
@@ -538,81 +569,6 @@ if (showAllButton && fightGrid) {
       behavior: "smooth",
       block: "center"
     });
-  });
-}
-
-/*
-|--------------------------------------------------------------------------
-| Form kontak
-|--------------------------------------------------------------------------
-*/
-
-const contactDialog =
-  document.querySelector("#contactDialog");
-
-const dialogTitle =
-  document.querySelector("#dialogTitle");
-
-const messageInput =
-  document.querySelector("#messageInput");
-
-document
-  .querySelectorAll(".modal-trigger")
-  .forEach(button => {
-    button.addEventListener("click", () => {
-      if (!contactDialog) {
-        return;
-      }
-
-      const type = button.dataset.type;
-
-      if (type === "petinju") {
-        dialogTitle.textContent =
-          "Pendaftaran Fighter";
-
-        messageInput.value =
-          "Saya ingin mendapatkan informasi pendaftaran fighter.";
-      } else {
-        dialogTitle.textContent =
-          "Kerja Sama Vendor atau Sponsor";
-
-        messageInput.value =
-          "Saya ingin membahas kerja sama dengan GRIT Boxing.";
-      }
-
-      contactDialog.showModal();
-    });
-  });
-
-const submitFormButton =
-  document.querySelector("#submitForm");
-
-if (submitFormButton) {
-  submitFormButton.addEventListener("click", () => {
-    const name =
-      document.querySelector("#nameInput")
-        ?.value.trim();
-
-    const phone =
-      document.querySelector("#phoneInput")
-        ?.value.trim();
-
-    const formStatus =
-      document.querySelector("#formStatus");
-
-    if (!formStatus) {
-      return;
-    }
-
-    if (!name || !phone) {
-      formStatus.textContent =
-        "Nama dan nomor WhatsApp wajib diisi.";
-
-      return;
-    }
-
-    formStatus.textContent =
-      "Data demo tersimpan. Form akan dihubungkan ke backend pada tahap berikutnya.";
   });
 }
 
