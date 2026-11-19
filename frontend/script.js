@@ -1,4 +1,7 @@
 const API_URL = "http://localhost:3000";
+const ticketsById = new Map();
+let snapLoadPromise;
+let ticketSalesOpen = false;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,12 +89,19 @@ function renderTicketCard(ticket) {
   const soldOut =
     ticket.status === "SOLD_OUT" ||
     ticket.stock <= 0;
+  const unavailable = soldOut || !ticketSalesOpen;
 
-  const statusText = soldOut ? "Habis" : "Tersedia";
+  const statusText = !ticketSalesOpen
+    ? "Penjualan ditutup"
+    : soldOut
+      ? "Habis"
+      : "Tersedia";
 
-  const stockText = soldOut
-    ? "Tiket telah habis"
-    : `${ticket.stock} tiket tersedia`;
+  const stockText = !ticketSalesOpen
+    ? "Pembelian tiket belum dibuka"
+    : soldOut
+      ? "Tiket telah habis"
+      : `${ticket.stock} tiket tersedia`;
 
   return `
     <article class="ticket-card">
@@ -99,7 +109,7 @@ function renderTicketCard(ticket) {
         <div class="ticket-description">
           <span
             class="ticket-status ${
-              soldOut ? "sold-out" : "available"
+              unavailable ? "sold-out" : "available"
             }"
           >
             ${statusText}
@@ -109,7 +119,7 @@ function renderTicketCard(ticket) {
 
           <p>
             ${escapeHtml(
-              ticket.description || "Tiket GRIT Boxing 2026."
+              ticket.description || "Tiket GRIT Boxing."
             )}
           </p>
 
@@ -134,14 +144,87 @@ function renderTicketCard(ticket) {
             type="button"
             class="select-ticket-button"
             data-ticket-id="${escapeHtml(ticket.id)}"
-            ${soldOut ? "disabled" : ""}
+            ${unavailable ? "disabled" : ""}
           >
-            ${soldOut ? "Habis" : "Pilih Tiket"}
+            ${!ticketSalesOpen ? "Belum Dibuka" : soldOut ? "Habis" : "Pilih Tiket"}
           </button>
         </div>
       </div>
     </article>
   `;
+}
+
+function formatEventDate(value, options) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) {
+    return "";
+  }
+  return new Intl.DateTimeFormat("id-ID", {
+    ...options,
+    timeZone: "Asia/Jakarta"
+  }).format(date);
+}
+
+function applyEventDetails(event) {
+  const configured = Boolean(event && event.isConfigured);
+  const name = configured ? event.name : "GRIT BOXING";
+  const date = configured
+    ? formatEventDate(event.startAt, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })
+    : "Belum ada acara";
+  const time = configured
+    ? `${formatEventDate(event.startAt, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      })} WIB`
+    : "Jadwal akan diumumkan";
+  const location = configured ? event.location : "Lokasi belum diumumkan";
+  const description =
+    configured && event.description
+      ? event.description
+      : "Detail acara akan diumumkan.";
+
+  document.querySelector("#heroEventName").textContent = name;
+  document.querySelector("#heroEventDate").textContent = date;
+  document.querySelector("#heroEventTime").textContent = time;
+  document.querySelector("#heroEventLocation").textContent = location;
+  document.querySelector("#heroEventAddress").textContent = configured
+    ? "Lokasi pertandingan"
+    : "Informasi acara akan diperbarui di sini";
+  document.querySelector("#eventDate").textContent = date;
+  document.querySelector("#eventTime").textContent = time;
+  document.querySelector("#eventLocation").textContent = location;
+  document.querySelector("#eventAddress").textContent = configured
+    ? "Lokasi pertandingan"
+    : "Informasi lokasi akan diperbarui";
+  document.querySelector("#eventDescription").textContent = description;
+  document.querySelector("#eventMapLocation").textContent = configured
+    ? location
+    : "Lokasi acara akan diumumkan.";
+  document.querySelector("#ticketEventName").textContent = name;
+  document.querySelector("#checkoutEventName").textContent = name;
+  document.title = configured ? name : "GRIT Boxing ID";
+
+  const mapLink = document.querySelector("#eventMapLink");
+  const mapUrl = configured ? event.mapUrl : "";
+  mapLink.hidden = !mapUrl;
+  if (mapLink.hidden) {
+    mapLink.removeAttribute("href");
+  } else {
+    mapLink.href = mapUrl;
+  }
+
+  ticketSalesOpen = Boolean(event && event.salesOpen);
+  const notice = document.querySelector("#ticketSalesNotice");
+  notice.hidden = ticketSalesOpen;
+  notice.textContent = configured
+    ? "Penjualan tiket belum dibuka atau sudah ditutup."
+    : "Belum ada acara aktif. Penjualan tiket belum dibuka.";
 }
 
 /*
@@ -185,6 +268,8 @@ async function loadTicketCategories() {
       throw new Error("Format data tiket tidak sesuai.");
     }
 
+    applyEventDetails(result.event);
+
     if (result.data.length === 0) {
       container.innerHTML = `
         <div class="ticket-error">
@@ -197,6 +282,25 @@ async function loadTicketCategories() {
 
       return;
     }
+
+    ticketsById.clear();
+    const availablePrices = [];
+    result.data.forEach(category => {
+      (category.tickets || []).forEach(ticket => {
+        ticketsById.set(ticket.id, ticket);
+        if (
+          ticketSalesOpen &&
+          ticket.status !== "SOLD_OUT" &&
+          ticket.stock > 0
+        ) {
+          availablePrices.push(Number(ticket.price));
+        }
+      });
+    });
+    document.querySelector("#eventStartingPrice").textContent =
+      availablePrices.length > 0
+        ? `Mulai dari ${formatRupiah(Math.min(...availablePrices))}`
+        : "Belum diumumkan";
 
     container.innerHTML = result.data
       .map(category => {
@@ -281,18 +385,135 @@ function activateTicketButtons() {
   buttons.forEach(button => {
     button.addEventListener("click", () => {
       const ticketId = button.dataset.ticketId;
+      const ticket = ticketsById.get(ticketId);
+      const checkoutDialog =
+        document.querySelector("#checkoutDialog");
 
-      if (!ticketId) {
+      if (!ticket || !checkoutDialog) {
         return;
       }
 
-      /*
-       * checkout.html akan dibuat pada tahap berikutnya.
-       * ID tiket dikirim melalui URL.
-       */
-      window.location.href =
-        `checkout.html?ticket=${encodeURIComponent(ticketId)}`;
+      document.querySelector("#checkoutTicketId").value =
+        ticket.id;
+      document.querySelector("#checkoutTicketName").textContent =
+        ticket.name;
+      document.querySelector("#checkoutTicketPrice").textContent =
+        formatRupiah(ticket.price);
+      document.querySelector("#checkoutStatus").textContent = "";
+      checkoutDialog.showModal();
     });
+  });
+}
+
+function loadSnap(clientKey, isProduction) {
+  if (
+    window.snap &&
+    Array.from(document.scripts).some(
+      script => script.dataset.clientKey === clientKey
+    )
+  ) {
+    return Promise.resolve();
+  }
+
+  if (snapLoadPromise) {
+    return snapLoadPromise;
+  }
+
+  snapLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = isProduction
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js";
+    script.dataset.clientKey = clientKey;
+    script.setAttribute("data-client-key", clientKey);
+    script.onload = () => resolve();
+    script.onerror = () => {
+      snapLoadPromise = null;
+      reject(new Error("Komponen pembayaran Midtrans gagal dimuat."));
+    };
+    document.head.appendChild(script);
+  });
+
+  return snapLoadPromise;
+}
+
+const checkoutForm =
+  document.querySelector("#checkoutForm");
+const checkoutDialog =
+  document.querySelector("#checkoutDialog");
+const checkoutClose =
+  document.querySelector("#checkoutClose");
+
+if (checkoutDialog && checkoutClose) {
+  checkoutClose.addEventListener("click", () => {
+    checkoutDialog.close();
+  });
+}
+
+if (checkoutForm) {
+  checkoutForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const submitButton =
+      document.querySelector("#checkoutSubmit");
+    const status =
+      document.querySelector("#checkoutStatus");
+    const ticketId =
+      document.querySelector("#checkoutTicketId").value;
+    const name =
+      document.querySelector("#checkoutName").value.trim();
+    const email =
+      document.querySelector("#checkoutEmail").value.trim();
+    const phone =
+      document.querySelector("#checkoutPhone").value.trim();
+
+    status.textContent = "Menyiapkan pembayaran...";
+    submitButton.disabled = true;
+
+    try {
+      const response = await fetch(`${API_URL}/api/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId, name, email, phone })
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Transaksi tidak dapat dibuat."
+        );
+      }
+
+      await loadSnap(result.clientKey, result.isProduction);
+      if (!window.snap) {
+        throw new Error("Komponen pembayaran Midtrans tidak tersedia.");
+      }
+
+      status.textContent = "Silakan selesaikan pembayaran di Midtrans.";
+      window.snap.pay(result.token, {
+        onSuccess: () => {
+          status.textContent =
+            "Pembayaran berhasil. Kode tiket akan dikirim ke email setelah dikonfirmasi Midtrans.";
+        },
+        onPending: () => {
+          status.textContent =
+            "Pembayaran menunggu konfirmasi Midtrans.";
+        },
+        onError: () => {
+          status.textContent =
+            "Pembayaran gagal. Silakan coba kembali.";
+        },
+        onClose: () => {
+          status.textContent =
+            "Jendela pembayaran ditutup. Jika pembayaran sudah dilakukan, tunggu konfirmasi email.";
+        }
+      });
+    } catch (error) {
+      console.error("Checkout gagal:", error);
+      status.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 }
 

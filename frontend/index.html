@@ -10,10 +10,12 @@
 
   <meta
     name="description"
-    content="GRIT Boxing 2026, High School Boxing Event in Bandung"
+    content="GRIT Boxing ID — kompetisi dan komunitas olahraga tinju."
   >
 
-  <title>GRIT Boxing 2026</title>
+  <meta name="theme-color" content="#111111">
+
+  <title>GRIT Boxing ID</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -57,13 +59,12 @@
     <!-- HERO -->
     <section class="hero section" id="home">
       <div class="hero-copy">
-        <p class="eyebrow">MORE THAN A FIGHT</p>
+        <p class="eyebrow">
+          <span class="eyebrow-mark" aria-hidden="true"></span>
+          MORE THAN A FIGHT
+        </p>
 
-        <h1>
-          GRIT BOXING
-          <br>
-          2026
-        </h1>
+        <h1 id="heroEventName">GRIT BOXING</h1>
 
         <p class="lead">
           Disiplin. Mental. Komunitas.
@@ -75,9 +76,9 @@
             <span class="icon">▣</span>
 
             <p>
-              <strong>Minggu, 13 September 2026</strong>
+              <strong id="heroEventDate">Belum ada acara</strong>
               <br>
-              <small>08.00 WIB sampai selesai</small>
+              <small id="heroEventTime">Jadwal akan diumumkan</small>
             </p>
           </div>
 
@@ -85,9 +86,9 @@
             <span class="icon">●</span>
 
             <p>
-              <strong>GOR Arcamanik</strong>
+              <strong id="heroEventLocation">Lokasi belum diumumkan</strong>
               <br>
-              <small>Bandung, Jawa Barat</small>
+              <small id="heroEventAddress">Informasi acara akan diperbarui di sini</small>
             </p>
           </div>
         </div>
@@ -106,7 +107,7 @@
       <div class="hero-image">
         <img
           src="../images/PosterUtama.jpg"
-          alt="Poster utama GRIT Boxing 2026"
+          alt="Poster utama GRIT Boxing"
         >
       </div>
     </section>
@@ -125,9 +126,9 @@
         </p>
 
         <p>
-          GRIT Boxing 2026 hadir sebagai High School Boxing
-          Event di Bandung yang mempertemukan fighter,
-          supporter, sekolah, boxing camp, dan masyarakat.
+          Setiap acara GRIT Boxing mempertemukan fighter,
+          supporter, sekolah, boxing camp, dan masyarakat
+          dalam semangat kompetisi yang positif.
         </p>
       </div>
 
@@ -155,19 +156,19 @@
         <div class="info-stack">
           <article class="info-card">
             <b>Tanggal dan Waktu</b>
-            <span>Minggu, 13 September 2026</span>
-            <small>08.00 WIB sampai selesai</small>
+            <span id="eventDate">Belum ada acara</span>
+            <small id="eventTime">Jadwal akan diumumkan</small>
           </article>
 
           <article class="info-card">
             <b>Venue</b>
-            <span>GOR Arcamanik</span>
-            <small>Kota Bandung, Jawa Barat</small>
+            <span id="eventLocation">Lokasi belum diumumkan</span>
+            <small id="eventAddress">Informasi lokasi akan diperbarui</small>
           </article>
 
           <article class="info-card">
             <b>Harga Tiket</b>
-            <span>Mulai dari Rp13.000</span>
+            <span id="eventStartingPrice">Belum diumumkan</span>
             <small>Harga bergantung kategori tiket</small>
           </article>
 
@@ -176,21 +177,27 @@
             <span>GRIT BOXING</span>
             <small>@gritboxingid</small>
           </article>
+
+          <article class="info-card">
+            <b>Informasi acara</b>
+            <span id="eventDescription">Detail acara akan diumumkan.</span>
+          </article>
         </div>
 
         <div class="map-card">
           <div class="map">
-            <img
-              src="../images/Lokasi.png"
-              alt="Peta lokasi GRIT Boxing"
-            >
+            <div class="map-location-placeholder" id="eventMapLocation">
+              Lokasi acara akan diumumkan.
+            </div>
           </div>
 
           <a
             class="btn btn-dark map-button"
-            href="https://maps.app.goo.gl/JafyqUxR5rg5PxCJ6"
+            id="eventMapLink"
+            href="#event"
             target="_blank"
             rel="noopener noreferrer"
+            hidden
           >
             Buka Google Maps
           </a>
@@ -292,14 +299,16 @@
     <section class="ticket-section muted" id="tickets">
       <div class="ticket-inner">
         <div class="ticket-heading">
-          <p class="section-label">GRIT BOXING 2026</p>
+          <p class="section-label" id="ticketEventName">GRIT BOXING</p>
           <h2>Pilih Tiket</h2>
 
           <p>
             Pilih kategori tiket yang sesuai untuk menyaksikan
-            GRIT Boxing 2026 secara langsung.
+            secara langsung.
           </p>
         </div>
+
+        <p class="ticket-sales-notice" id="ticketSalesNotice" hidden></p>
 
         <div id="ticketCategories">
           <div class="loading-state">
@@ -399,12 +408,81 @@
     <div>
       <h3>Ikuti Kami</h3>
       <p>Instagram · TikTok · YouTube</p>
+      <p><a class="admin-link" href="admin.html">Admin dashboard</a></p>
     </div>
 
     <small class="copyright">
-      © 2026 GRIT Boxing ID. All rights reserved.
+      © GRIT Boxing ID. All rights reserved.
     </small>
   </footer>
+
+  <!-- TICKET CHECKOUT DIALOG -->
+  <dialog id="checkoutDialog" aria-labelledby="checkoutTitle">
+    <form class="dialog-card" id="checkoutForm">
+      <button
+        class="close"
+        type="button"
+        id="checkoutClose"
+        aria-label="Tutup"
+      >
+        ×
+      </button>
+
+      <p class="section-label" id="checkoutEventName">GRIT BOXING</p>
+      <h2 id="checkoutTitle">Beli Tiket</h2>
+
+      <div class="checkout-summary">
+        <strong id="checkoutTicketName"></strong>
+        <strong id="checkoutTicketPrice"></strong>
+      </div>
+
+      <input id="checkoutTicketId" type="hidden">
+
+      <label>
+        Nama Lengkap
+        <input
+          id="checkoutName"
+          name="name"
+          autocomplete="name"
+          required
+          maxlength="100"
+        >
+      </label>
+
+      <label>
+        Email untuk menerima tiket
+        <input
+          id="checkoutEmail"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          maxlength="254"
+        >
+      </label>
+
+      <label>
+        Nomor WhatsApp (opsional)
+        <input
+          id="checkoutPhone"
+          name="phone"
+          type="tel"
+          autocomplete="tel"
+          maxlength="20"
+        >
+      </label>
+
+      <p class="form-note" id="checkoutStatus" aria-live="polite"></p>
+
+      <button class="btn btn-dark" id="checkoutSubmit" type="submit">
+        Lanjutkan Pembayaran
+      </button>
+
+      <small class="checkout-disclaimer">
+        Kode tiket dikirim ke email setelah pembayaran berhasil dikonfirmasi.
+      </small>
+    </form>
+  </dialog>
 
   <!-- CONTACT DIALOG -->
   <dialog id="contactDialog">

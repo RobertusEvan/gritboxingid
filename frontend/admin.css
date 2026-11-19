@@ -1,0 +1,450 @@
+.admin-body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 86% 0, rgba(232, 72, 61, 0.07), transparent 30%),
+    var(--canvas);
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 76px;
+  padding: 12px max(24px, calc((100% - var(--max)) / 2));
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.admin-brand {
+  color: var(--ink);
+}
+
+.admin-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--subtle);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.admin-back-link:hover {
+  color: var(--accent-dark);
+}
+
+.admin-main {
+  width: min(100% - 48px, 980px);
+  margin: 0 auto;
+  padding: 72px 0 100px;
+}
+
+.admin-login-card {
+  width: min(100%, 470px);
+  margin: 4vh auto 0;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.admin-login-card h1,
+.admin-dashboard-heading h1 {
+  margin-bottom: 10px;
+  font-size: clamp(30px, 5vw, 42px);
+  letter-spacing: -0.055em;
+}
+
+.admin-intro {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 14px;
+}
+
+.admin-form {
+  display: grid;
+  gap: 17px;
+  margin-top: 28px;
+}
+
+.admin-form label,
+.ticket-edit-form label {
+  display: grid;
+  gap: 7px;
+  color: #46443f;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select,
+.ticket-edit-form input,
+.ticket-edit-form textarea,
+.ticket-edit-form select {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #d8d6cf;
+  border-radius: 10px;
+  color: var(--ink);
+  background: #fbfaf8;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus,
+.ticket-edit-form input:focus,
+.ticket-edit-form textarea:focus,
+.ticket-edit-form select:focus {
+  border-color: var(--accent);
+  outline: 3px solid rgba(232, 72, 61, 0.16);
+  outline-offset: 1px;
+}
+
+.admin-submit {
+  width: 100%;
+  border: 0;
+}
+
+.admin-message,
+.admin-notice {
+  min-height: 20px;
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.admin-security-note {
+  margin: 24px 0 0;
+  padding-top: 17px;
+  border-top: 1px solid #eeede9;
+  color: var(--subtle);
+  font-size: 11px;
+}
+
+.admin-dashboard-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-dashboard-heading .admin-intro {
+  max-width: 500px;
+}
+
+.admin-logout {
+  flex: 0 0 auto;
+}
+
+.admin-notice {
+  min-height: 0;
+  margin-bottom: 16px;
+}
+
+.admin-notice.is-success {
+  color: var(--success);
+}
+
+.admin-panel {
+  margin: 24px 0;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 0 6px 20px rgba(24, 23, 21, 0.035);
+}
+
+.admin-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.admin-panel-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.admin-panel-heading .section-label {
+  margin-bottom: 7px;
+}
+
+.admin-event-state {
+  margin: 4px 0 0;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: var(--subtle);
+  background: var(--canvas);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-event-form,
+.admin-create-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 20px;
+}
+
+.admin-form textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.admin-form .field-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 10px !important;
+}
+
+.admin-checkbox input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--accent);
+}
+
+.admin-help {
+  margin: 14px 0 0;
+  color: var(--subtle);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-verify-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.admin-verify-form label {
+  display: grid;
+  flex: 1;
+  gap: 7px;
+  color: #46443f;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.admin-verify-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #d8d6cf;
+  border-radius: 10px;
+  color: var(--ink);
+  background: #fbfaf8;
+  font-family: Consolas, monospace;
+  text-transform: uppercase;
+}
+
+.admin-verification-result {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+  color: var(--subtle);
+  font-size: 13px;
+}
+
+.admin-verification-result strong {
+  font-size: 16px;
+}
+
+.admin-verification-result.is-valid strong {
+  color: var(--success);
+}
+
+.admin-verification-result.is-expired strong,
+.admin-verification-result.is-not_found strong,
+.admin-verification-result.is-error {
+  color: var(--danger);
+}
+
+.admin-category {
+  margin-bottom: 32px;
+}
+
+.admin-category-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  margin-bottom: 13px;
+}
+
+.admin-category-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.admin-category-heading p {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 12px;
+}
+
+.admin-ticket-card {
+  margin-bottom: 12px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 6px 20px rgba(24, 23, 21, 0.035);
+}
+
+.admin-ticket-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-ticket-heading h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.admin-ticket-id {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #77746e;
+  background: var(--canvas);
+  font-family: Consolas, monospace;
+  font-size: 10px;
+}
+
+.ticket-edit-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.ticket-edit-form .field-wide {
+  grid-column: 1 / -1;
+}
+
+.ticket-edit-form textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.admin-ticket-actions {
+  display: flex;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
+  padding-top: 4px;
+}
+
+.save-ticket-button {
+  min-width: 145px;
+  border: 0;
+}
+
+.save-ticket-button:disabled,
+.admin-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.admin-loading,
+.admin-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  min-height: 180px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: var(--subtle);
+  background: var(--paper);
+}
+
+.admin-empty {
+  padding: 24px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 620px) {
+  .admin-topbar {
+    min-height: 68px;
+    padding: 10px 20px;
+  }
+
+  .admin-back-link {
+    font-size: 11px;
+  }
+
+  .admin-main {
+    width: calc(100% - 32px);
+    padding: 44px 0 72px;
+  }
+
+  .admin-login-card {
+    margin-top: 2vh;
+    padding: 26px 21px;
+  }
+
+  .admin-dashboard-heading {
+    align-items: flex-start;
+  }
+
+  .admin-panel {
+    padding: 20px 17px;
+  }
+
+  .admin-event-form,
+  .admin-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form .field-wide {
+    grid-column: auto;
+  }
+
+  .admin-verify-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-logout {
+    min-height: 40px;
+    padding: 9px 14px;
+  }
+
+  .admin-category-heading {
+    display: block;
+  }
+
+  .admin-category-heading p {
+    margin-top: 5px;
+  }
+
+  .admin-ticket-card {
+    padding: 17px;
+  }
+
+  .ticket-edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-edit-form .field-wide,
+  .admin-ticket-actions {
+    grid-column: auto;
+  }
+
+  .admin-ticket-actions,
+  .save-ticket-button {
+    width: 100%;
+  }
+}

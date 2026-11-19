@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111111">
+  <meta
+    name="description"
+    content="Dashboard admin GRIT Boxing untuk mengelola tiket."
+  >
+  <title>Admin — GRIT Boxing</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="admin-body">
+  <header class="admin-topbar">
+    <a class="brand admin-brand" href="index.html" aria-label="GRIT Boxing">
+      <strong>GRIT</strong>
+      <span>BOXING ID</span>
+    </a>
+
+    <a class="admin-back-link" href="index.html">
+      <span aria-hidden="true">&larr;</span>
+      Kembali ke website
+    </a>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-login-card" id="adminLoginView">
+      <p class="section-label">AREA TERBATAS</p>
+      <h1>Masuk ke dashboard</h1>
+      <p class="admin-intro">
+        Kelola harga, stok, dan informasi tiket GRIT Boxing.
+      </p>
+
+      <form id="adminLoginForm" class="admin-form">
+        <label>
+          Username
+          <input
+            name="username"
+            type="text"
+            autocomplete="username"
+            required
+            maxlength="80"
+          >
+        </label>
+
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="200"
+          >
+        </label>
+
+        <p class="admin-message" id="adminLoginMessage" aria-live="polite"></p>
+
+        <button class="btn btn-dark admin-submit" id="adminLoginSubmit" type="submit">
+          Masuk
+        </button>
+      </form>
+
+      <p class="admin-security-note">
+        Akses admin bersifat privat. Jangan bagikan username atau password.
+      </p>
+    </section>
+
+    <section class="admin-dashboard" id="adminDashboardView" hidden>
+      <div class="admin-dashboard-heading">
+        <div>
+          <p class="section-label">GRIT BOXING</p>
+          <h1>Pengelolaan acara &amp; tiket</h1>
+          <p class="admin-intro">
+            Atur satu acara aktif, penjualan tiket, dan validasi kode tiket.
+          </p>
+        </div>
+
+        <button class="btn btn-light admin-logout" id="adminLogout" type="button">
+          Keluar
+        </button>
+      </div>
+
+      <div class="admin-notice" id="adminDashboardMessage" aria-live="polite"></div>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading">
+          <div>
+            <p class="section-label">ACARA AKTIF</p>
+            <h2>Informasi acara</h2>
+          </div>
+          <p class="admin-event-state" id="adminEventState">Belum ada acara</p>
+        </div>
+
+        <form id="adminEventForm" class="admin-form admin-event-form">
+          <label>
+            Nama acara
+            <input name="name" type="text" maxlength="120">
+          </label>
+
+          <label>
+            Lokasi
+            <input name="location" type="text" maxlength="200">
+          </label>
+
+          <label>
+            Mulai
+            <input name="startAt" type="datetime-local">
+          </label>
+
+          <label>
+            Selesai / masa berlaku tiket
+            <input name="endAt" type="datetime-local">
+          </label>
+
+          <label class="field-wide">
+            Deskripsi acara
+            <textarea name="description" maxlength="1000"></textarea>
+          </label>
+
+          <label class="field-wide">
+            Tautan Google Maps (opsional)
+            <input name="mapUrl" type="url" maxlength="500" placeholder="https://maps.google.com/...">
+          </label>
+
+          <label class="admin-checkbox field-wide">
+            <input name="salesOpen" type="checkbox">
+            Buka penjualan tiket untuk acara ini
+          </label>
+
+          <div class="admin-ticket-actions field-wide">
+            <button class="btn btn-dark" id="saveEventButton" type="submit">
+              Simpan acara
+            </button>
+          </div>
+        </form>
+        <p class="admin-help">
+          Jika belum ada acara, kosongkan nama, lokasi, dan jadwal lalu simpan.
+          Penjualan otomatis tertutup setelah waktu acara berakhir.
+        </p>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading">
+          <div>
+            <p class="section-label">JENIS TIKET</p>
+            <h2>Tambah tiket</h2>
+          </div>
+        </div>
+
+        <form id="adminTicketCreateForm" class="admin-form admin-create-form">
+          <label>
+            Kategori
+            <select name="categoryId" id="ticketCategorySelect" required></select>
+          </label>
+
+          <label>
+            Nama tiket
+            <input name="name" type="text" maxlength="80" required>
+          </label>
+
+          <label>
+            Harga (Rupiah)
+            <input name="price" type="number" min="1" max="999999999" step="1" required>
+          </label>
+
+          <label>
+            Stok
+            <input name="stock" type="number" min="0" max="1000000" step="1" value="0" required>
+          </label>
+
+          <label class="field-wide">
+            Deskripsi
+            <textarea name="description" maxlength="500"></textarea>
+          </label>
+
+          <div class="admin-ticket-actions field-wide">
+            <button class="btn btn-dark" id="createTicketButton" type="submit">
+              Tambah jenis tiket
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading">
+          <div>
+            <p class="section-label">VALIDASI MASUK</p>
+            <h2>Cek kode tiket</h2>
+          </div>
+        </div>
+
+        <form id="verifyTicketForm" class="admin-verify-form">
+          <label>
+            Kode tiket
+            <input name="code" type="text" maxlength="40" placeholder="GRIT-XXXXXXXXXXXXXXXX" required>
+          </label>
+          <button class="btn btn-dark" id="verifyTicketButton" type="submit">
+            Cek kode
+          </button>
+        </form>
+        <div class="admin-verification-result" id="verifyTicketResult" aria-live="polite"></div>
+      </section>
+
+      <div class="admin-ticket-list" id="adminTicketList">
+        <div class="admin-loading">
+          <span class="spinner" aria-hidden="true"></span>
+          Memuat tiket...
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>
