@@ -1224,6 +1224,9 @@ app.post("/api/checkout", async (req, res) => {
 app.post("/api/midtrans/webhook", async (req, res) => {
   const body =
     req.body && typeof req.body === "object" ? req.body : {};
+  const signatureSecretKey =
+    process.env.MIDTRANS_SIGNATURE_SECRET_KEY ||
+    process.env.MIDTRANS_SERVER_KEY;
   const {
     order_id: orderId,
     status_code: statusCode,
@@ -1251,7 +1254,7 @@ app.post("/api/midtrans/webhook", async (req, res) => {
   const expectedSignature = crypto
     .createHash("sha512")
     .update(
-      `${orderId}${statusCode}${grossAmount}${process.env.MIDTRANS_SERVER_KEY}`
+      `${orderId}${statusCode}${grossAmount}${signatureSecretKey}`
     )
     .digest();
   const receivedSignature = Buffer.from(signature, "hex");

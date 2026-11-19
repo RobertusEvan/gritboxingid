@@ -14,6 +14,7 @@ mengirimkannya ke email pembeli.
    ```env
    DATABASE_URL=postgresql://...
    MIDTRANS_SERVER_KEY=...
+   MIDTRANS_SIGNATURE_SECRET_KEY=...
    MIDTRANS_CLIENT_KEY=...
    SMTP_HOST=...
    SMTP_PORT=465
@@ -84,8 +85,12 @@ otomatis memakai API same-origin. Health check tersedia di `/api/health`.
 
 Atur URL Payment Notification Midtrans ke
 `https://<domain-vercel>/api/midtrans/webhook`. Midtrans tidak dapat mengakses
-`localhost`. Untuk Sandbox, gunakan Midtrans Sandbox Server Key/Client Key dan
-`MIDTRANS_IS_PRODUCTION=false`; jangan pernah mengirim secret melalui chat.
+`localhost`. Untuk Sandbox, gunakan Midtrans Sandbox Server Key dan Client Key
+dari merchant yang sama serta `MIDTRANS_IS_PRODUCTION=false`. Jika dashboard
+Midtrans menampilkan `Signature Secret Key` terpisah, simpan nilainya sebagai
+`MIDTRANS_SIGNATURE_SECRET_KEY`; jika tidak diatur, webhook memakai
+`MIDTRANS_SERVER_KEY` untuk kompatibilitas dengan konfigurasi lama. Jangan
+pernah mengirim secret melalui chat.
 Periksa kuota paket Vercel dan biaya transaksi Midtrans sebelum penjualan live.
 
 Pastikan pengirim mengizinkan autentikasi SMTP dan alamat `SMTP_USER` dapat
