@@ -572,6 +572,115 @@ if (showAllButton && fightGrid) {
   });
 }
 
+function renderFightCards(fightCards) {
+  if (!fightGrid) {
+    return;
+  }
+  if (showAllButton) {
+    showAllButton.hidden = fightCards.length === 0;
+  }
+  fightGrid.innerHTML =
+    fightCards.length > 0
+      ? fightCards
+          .map(
+            fight => `
+              <article class="fight-card">
+                <div class="fighters">
+                  <div>
+                    <div class="avatar">
+                      ${
+                        fight.redImageId
+                          ? `<img src="${escapeHtml(
+                              `${API_URL}/api/site-images/${encodeURIComponent(fight.redImageId)}`
+                            )}" alt="${escapeHtml(fight.redName)}">`
+                          : ""
+                      }
+                    </div>
+                    <b>${escapeHtml(fight.redName)}</b>
+                  </div>
+                  <strong>VS</strong>
+                  <div>
+                    <div class="avatar">
+                      ${
+                        fight.blueImageId
+                          ? `<img src="${escapeHtml(
+                              `${API_URL}/api/site-images/${encodeURIComponent(fight.blueImageId)}`
+                            )}" alt="${escapeHtml(fight.blueName)}">`
+                          : ""
+                      }
+                    </div>
+                    <b>${escapeHtml(fight.blueName)}</b>
+                  </div>
+                </div>
+                <p>${escapeHtml(fight.division)}</p>
+              </article>
+            `
+          )
+          .join("")
+      : '<p class="site-content-empty">Fight Card akan diumumkan.</p>';
+}
+
+function renderSponsorLogos(sponsors) {
+  const logoGrid = document.querySelector(".logo-grid");
+  if (!logoGrid) {
+    return;
+  }
+  logoGrid.innerHTML =
+    sponsors.length > 0
+      ? sponsors
+          .map(
+            sponsor => `
+              <div class="sponsor-logo">
+                ${
+                  sponsor.imageId
+                    ? `<img src="${escapeHtml(
+                        `${API_URL}/api/site-images/${encodeURIComponent(sponsor.imageId)}`
+                      )}" alt="${escapeHtml(sponsor.name)} logo">`
+                    : `<span>${escapeHtml(sponsor.name)}</span>`
+                }
+              </div>
+            `
+          )
+          .join("")
+      : '<p class="site-content-empty">Informasi sponsor akan diumumkan.</p>';
+}
+
+async function loadSiteContent() {
+  try {
+    const response = await fetch(`${API_URL}/api/site-content`);
+    if (!response.ok) {
+      throw new Error(`Server memberikan status ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (
+      !result.success ||
+      !result.data ||
+      !Array.isArray(result.data.fightCards) ||
+      !Array.isArray(result.data.sponsors)
+    ) {
+      throw new Error("Format konten website tidak sesuai.");
+    }
+
+    renderFightCards(result.data.fightCards);
+    renderSponsorLogos(result.data.sponsors);
+  } catch (error) {
+    console.error("Gagal memuat Fight Card dan logo sponsor:", error);
+    if (showAllButton) {
+      showAllButton.hidden = true;
+    }
+    if (fightGrid) {
+      fightGrid.innerHTML =
+        '<p class="site-content-error">Fight Card gagal dimuat. Muat ulang halaman untuk mencoba kembali.</p>';
+    }
+    const logoGrid = document.querySelector(".logo-grid");
+    if (logoGrid) {
+      logoGrid.innerHTML =
+        '<p class="site-content-error">Logo sponsor gagal dimuat. Muat ulang halaman untuk mencoba kembali.</p>';
+    }
+  }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Memulai pengambilan tiket
@@ -579,3 +688,4 @@ if (showAllButton && fightGrid) {
 */
 
 loadTicketCategories();
+loadSiteContent();

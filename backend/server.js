@@ -69,6 +69,43 @@ const defaultEventData = {
   salesOpen: false
 };
 
+const defaultSiteContent = {
+  fightCards: [
+    {
+      id: "fight-1",
+      redName: "Fighter 1",
+      blueName: "Fighter 2",
+      division: "Kelas pertandingan",
+      redImageId: null,
+      blueImageId: null
+    },
+    {
+      id: "fight-2",
+      redName: "Fighter 3",
+      blueName: "Fighter 4",
+      division: "Kelas pertandingan",
+      redImageId: null,
+      blueImageId: null
+    },
+    {
+      id: "fight-3",
+      redName: "Fighter 5",
+      blueName: "Fighter 6",
+      division: "Kelas pertandingan",
+      redImageId: null,
+      blueImageId: null
+    }
+  ],
+  sponsors: Array.from({ length: 6 }, (_, index) => ({
+    id: `sponsor-${index + 1}`,
+    name: "Logo",
+    imageId: null
+  }))
+};
+const siteImageMaxBytes = 2 * 1024 * 1024;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const ticketCategories = [
   {
     id: "supporter",
@@ -201,6 +238,139 @@ async function loadAppSettings() {
     ticketCategories: result.rows[0].ticket_categories,
     event: result.rows[0].event_data || defaultEventData
   };
+}
+
+async function loadSiteContent() {
+  if (!pool) {
+    return JSON.parse(JSON.stringify(defaultSiteContent));
+  }
+
+  const result = await pool.query(
+    `SELECT fight_cards, sponsors
+     FROM grit_boxing_site_content
+     WHERE content_key = $1`,
+    ["main"]
+  );
+  if (result.rows.length === 0) {
+    throw new Error("Konten website belum tersedia.");
+  }
+  return {
+    fightCards: result.rows[0].fight_cards,
+    sponsors: result.rows[0].sponsors
+  };
+}
+
+function normalizeSiteContent(input) {
+  if (
+    !input ||
+    typeof input !== "object" ||
+    !Array.isArray(input.fightCards) ||
+    !Array.isArray(input.sponsors) ||
+    input.fightCards.length > 30 ||
+    input.sponsors.length > 50
+  ) {
+    return null;
+  }
+
+  const normalizeId = value =>
+    typeof value === "string" && /^[a-z0-9-]{1,64}$/i.test(value)
+      ? value
+      : null;
+  const normalizeImageId = value => {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+    return typeof value === "string" && uuidPattern.test(value)
+      ? value.toLowerCase()
+      : undefined;
+  };
+  const fightCards = [];
+  for (const fight of input.fightCards) {
+    const id = normalizeId(fight && fight.id);
+    const redName =
+      typeof (fight && fight.redName) === "string"
+        ? fight.redName.trim()
+        : "";
+    const blueName =
+      typeof (fight && fight.blueName) === "string"
+        ? fight.blueName.trim()
+        : "";
+    const division =
+      typeof (fight && fight.division) === "string"
+        ? fight.division.trim()
+        : "";
+    const redImageId = normalizeImageId(fight && fight.redImageId);
+    const blueImageId = normalizeImageId(fight && fight.blueImageId);
+
+    if (
+      !id ||
+      !redName ||
+      redName.length > 100 ||
+      !blueName ||
+      blueName.length > 100 ||
+      !division ||
+      division.length > 100 ||
+      redImageId === undefined ||
+      blueImageId === undefined
+    ) {
+      return null;
+    }
+    fightCards.push({
+      id,
+      redName,
+      blueName,
+      division,
+      redImageId,
+      blueImageId
+    });
+  }
+
+  const sponsors = [];
+  for (const sponsor of input.sponsors) {
+    const id = normalizeId(sponsor && sponsor.id);
+    const name =
+      typeof (sponsor && sponsor.name) === "string"
+        ? sponsor.name.trim()
+        : "";
+    const imageId = normalizeImageId(sponsor && sponsor.imageId);
+
+    if (
+      !id ||
+      !name ||
+      name.length > 100 ||
+      imageId === undefined
+    ) {
+      return null;
+    }
+    sponsors.push({ id, name, imageId });
+  }
+
+  return { fightCards, sponsors };
+}
+
+function detectSiteImageType(image) {
+  if (
+    image.length >= 8 &&
+    image.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+  ) {
+    return "image/png";
+  }
+  if (
+    image.length >= 3 &&
+    image[0] === 0xff &&
+    image[1] === 0xd8 &&
+    image[2] === 0xff
+  ) {
+    return "image/jpeg";
+  }
+  if (
+    image.length >= 12 &&
+    image.toString("ascii", 0, 4) === "RIFF" &&
+    image.toString("ascii", 8, 12) === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  return null;
 }
 
 async function loadTicketCategories() {
@@ -373,6 +543,7 @@ async function ensureOrdersTable() {
       email_sent_at TIMESTAMPTZ,
       ticket_email_sent_at TIMESTAMPTZ,
       stock_decremented_at TIMESTAMPTZ,
+      settled_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -395,8 +566,16 @@ async function ensureOrdersTable() {
     ),
     pool.query(
       "ALTER TABLE orders ADD COLUMN IF NOT EXISTS stock_decremented_at TIMESTAMPTZ"
+    ),
+    pool.query(
+      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS settled_at TIMESTAMPTZ"
     )
   ]);
+  await pool.query(
+    `UPDATE orders
+     SET settled_at = updated_at
+     WHERE status = 'settlement' AND settled_at IS NULL`
+  );
   await pool.query(`
     CREATE TABLE IF NOT EXISTS grit_boxing_settings (
       settings_key TEXT PRIMARY KEY,
@@ -425,6 +604,33 @@ async function ensureOrdersTable() {
      WHERE settings_key = $2 AND event_data IS NULL`,
     [JSON.stringify(defaultEventData), "tickets"]
   );
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS grit_boxing_site_content (
+      content_key TEXT PRIMARY KEY,
+      fight_cards JSONB NOT NULL,
+      sponsors JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(
+    `INSERT INTO grit_boxing_site_content
+       (content_key, fight_cards, sponsors)
+     VALUES ($1, $2::jsonb, $3::jsonb)
+     ON CONFLICT (content_key) DO NOTHING`,
+    [
+      "main",
+      JSON.stringify(defaultSiteContent.fightCards),
+      JSON.stringify(defaultSiteContent.sponsors)
+    ]
+  );
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS grit_boxing_site_images (
+      image_id UUID PRIMARY KEY,
+      content_type TEXT NOT NULL,
+      image_data BYTEA NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS grit_issued_tickets (
       ticket_code TEXT PRIMARY KEY,
@@ -456,6 +662,48 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "Backend GRIT Boxing ID berhasil berjalan"
   });
+});
+
+app.get("/api/site-content", async (req, res) => {
+  try {
+    res.json({ success: true, data: await loadSiteContent() });
+  } catch (error) {
+    console.error("Gagal memuat konten website:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat konten website."
+    });
+  }
+});
+
+app.get("/api/site-images/:imageId", async (req, res) => {
+  if (!uuidPattern.test(req.params.imageId)) {
+    return res.status(404).end();
+  }
+  if (!pool) {
+    return res.status(503).end();
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT content_type, image_data
+       FROM grit_boxing_site_images
+       WHERE image_id = $1`,
+      [req.params.imageId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).end();
+    }
+
+    res
+      .set("Content-Type", result.rows[0].content_type)
+      .set("X-Content-Type-Options", "nosniff")
+      .set("Cache-Control", "public, max-age=31536000, immutable")
+      .send(result.rows[0].image_data);
+  } catch (error) {
+    console.error("Gagal memuat gambar website:", error);
+    res.status(500).end();
+  }
 });
 
 app.get("/api/event", async (req, res) => {
@@ -561,6 +809,276 @@ app.post("/api/admin/login", (req, res) => {
   );
   res.json({ success: true, token, expiresIn: 14400 });
 });
+
+app.get("/api/admin/summary", requireAdmin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: "Database belum dikonfigurasi."
+    });
+  }
+
+  const days = Number(req.query.days || 7);
+  if (![7, 30, 90].includes(days)) {
+    return res.status(400).json({
+      success: false,
+      message: "Periode ringkasan tidak valid."
+    });
+  }
+
+  const periodStart =
+    "(date_trunc('day', NOW() AT TIME ZONE 'Asia/Jakarta') - (($1::int - 1) * INTERVAL '1 day')) AT TIME ZONE 'Asia/Jakarta'";
+
+  try {
+    const [totalsResult, ticketsResult, dailyResult, methodsResult] =
+      await Promise.all([
+        pool.query(
+          `SELECT
+             COUNT(*) FILTER (WHERE status = 'settlement') AS successful_transactions,
+             COALESCE(SUM(gross_amount) FILTER (WHERE status = 'settlement'), 0) AS revenue,
+             COUNT(*) FILTER (WHERE status = 'pending') AS pending_transactions
+           FROM orders
+           WHERE (status = 'settlement' AND settled_at >= ${periodStart})
+              OR (status = 'pending' AND created_at >= ${periodStart})`,
+          [days]
+        ),
+        pool.query(
+          `SELECT COUNT(*) AS issued_tickets
+           FROM grit_issued_tickets
+           WHERE created_at >= ${periodStart}`,
+          [days]
+        ),
+        pool.query(
+          `SELECT
+             TO_CHAR((settled_at AT TIME ZONE 'Asia/Jakarta')::date, 'YYYY-MM-DD') AS date,
+             COUNT(*) AS transactions,
+             COALESCE(SUM(gross_amount), 0) AS amount
+           FROM orders
+           WHERE status = 'settlement'
+             AND settled_at >= ${periodStart}
+           GROUP BY 1
+           ORDER BY 1`,
+          [days]
+        ),
+        pool.query(
+          `SELECT
+             COALESCE(NULLIF(payment_type, ''), 'other') AS method,
+             COUNT(*) AS transactions,
+             COALESCE(SUM(gross_amount), 0) AS amount
+           FROM orders
+           WHERE status = 'settlement'
+             AND settled_at >= ${periodStart}
+           GROUP BY 1
+           ORDER BY amount DESC`,
+          [days]
+        )
+      ]);
+
+    res.json({
+      success: true,
+      data: {
+        days,
+        summary: {
+          revenue: Number(totalsResult.rows[0].revenue),
+          successfulTransactions: Number(
+            totalsResult.rows[0].successful_transactions
+          ),
+          issuedTickets: Number(ticketsResult.rows[0].issued_tickets),
+          pendingTransactions: Number(
+            totalsResult.rows[0].pending_transactions
+          )
+        },
+        daily: dailyResult.rows.map(row => ({
+          date: row.date,
+          transactions: Number(row.transactions),
+          amount: Number(row.amount)
+        })),
+        paymentMethods: methodsResult.rows.map(row => ({
+          method: row.method,
+          transactions: Number(row.transactions),
+          amount: Number(row.amount)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error("Gagal memuat ringkasan transaksi admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat ringkasan transaksi."
+    });
+  }
+});
+
+app.get("/api/admin/site-content", requireAdmin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: "Database belum dikonfigurasi."
+    });
+  }
+
+  try {
+    res.json({ success: true, data: await loadSiteContent() });
+  } catch (error) {
+    console.error("Gagal memuat konten website admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat konten website."
+    });
+  }
+});
+
+app.patch("/api/admin/site-content", requireAdmin, async (req, res) => {
+  if (!pool) {
+    return res.status(503).json({
+      success: false,
+      message: "Database belum dikonfigurasi."
+    });
+  }
+
+  const content = normalizeSiteContent(req.body);
+  if (!content) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Data fight card atau sponsor tidak valid. Periksa nama, kelas, gambar, dan jumlah item."
+    });
+  }
+
+  const imageIds = Array.from(
+    new Set(
+      content.fightCards
+        .flatMap(fight => [fight.redImageId, fight.blueImageId])
+        .concat(content.sponsors.map(sponsor => sponsor.imageId))
+        .filter(Boolean)
+    )
+  );
+  let client;
+  let transactionOpen = false;
+
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    transactionOpen = true;
+
+    if (imageIds.length > 0) {
+      const images = await client.query(
+        "SELECT image_id FROM grit_boxing_site_images WHERE image_id = ANY($1::uuid[])",
+        [imageIds]
+      );
+      if (images.rowCount !== imageIds.length) {
+        await client.query("ROLLBACK");
+        transactionOpen = false;
+        return res.status(400).json({
+          success: false,
+          message: "Ada gambar yang belum selesai diunggah. Unggah ulang lalu simpan."
+        });
+      }
+    }
+
+    const updated = await client.query(
+      `UPDATE grit_boxing_site_content
+       SET fight_cards = $1::jsonb, sponsors = $2::jsonb, updated_at = NOW()
+       WHERE content_key = $3`,
+      [
+        JSON.stringify(content.fightCards),
+        JSON.stringify(content.sponsors),
+        "main"
+      ]
+    );
+    if (updated.rowCount === 0) {
+      throw new Error("Konten website belum tersedia.");
+    }
+    await client.query(
+      "DELETE FROM grit_boxing_site_images WHERE image_id <> ALL($1::uuid[])",
+      [imageIds]
+    );
+    await client.query("COMMIT");
+    transactionOpen = false;
+
+    res.json({
+      success: true,
+      message: "Fight card dan logo sponsor berhasil disimpan.",
+      data: content
+    });
+  } catch (error) {
+    if (client && transactionOpen) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error(
+          "Gagal membatalkan penyimpanan konten website:",
+          rollbackError
+        );
+      }
+    }
+    console.error("Gagal menyimpan konten website admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Gagal menyimpan konten website."
+    });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
+
+app.post(
+  "/api/admin/site-images",
+  requireAdmin,
+  express.raw({
+    type: "application/octet-stream",
+    limit: siteImageMaxBytes
+  }),
+  async (req, res) => {
+    if (!pool) {
+      return res.status(503).json({
+        success: false,
+        message: "Database belum dikonfigurasi."
+      });
+    }
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Pilih file gambar untuk diunggah."
+      });
+    }
+
+    const detectedType = detectSiteImageType(req.body);
+    if (
+      req.body.length > siteImageMaxBytes ||
+      !detectedType ||
+      req.get("x-image-type") !== detectedType
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Gunakan gambar PNG, JPG, atau WebP maksimal 2 MB."
+      });
+    }
+
+    const imageId = crypto.randomUUID();
+    try {
+      await pool.query(
+        `INSERT INTO grit_boxing_site_images
+           (image_id, content_type, image_data)
+         VALUES ($1, $2, $3)`,
+        [imageId, detectedType, req.body]
+      );
+      res.status(201).json({
+        success: true,
+        message: "Gambar berhasil diunggah.",
+        data: { imageId }
+      });
+    } catch (error) {
+      console.error("Gagal menyimpan gambar website:", error);
+      res.status(500).json({
+        success: false,
+        message: "Gagal menyimpan gambar."
+      });
+    }
+  }
+);
 
 app.get("/api/admin/tickets", requireAdmin, async (req, res) => {
   if (!pool) {
@@ -1309,7 +1827,8 @@ app.post("/api/midtrans/webhook", async (req, res) => {
 
     await client.query(
       `UPDATE orders
-       SET status = $1, payment_type = $2, updated_at = NOW()
+       SET status = $1, payment_type = $2, updated_at = NOW(),
+           settled_at = COALESCE(settled_at, NOW())
        WHERE order_id = $3`,
       ["settlement", paymentType || null, orderId]
     );

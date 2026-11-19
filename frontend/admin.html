@@ -31,7 +31,7 @@
       <p class="section-label">AREA TERBATAS</p>
       <h1>Masuk ke dashboard</h1>
       <p class="admin-intro">
-        Kelola harga, stok, dan informasi tiket GRIT Boxing.
+        Pantau pembayaran, kelola tiket dan acara, serta validasi kode tiket.
       </p>
 
       <form id="adminLoginForm" class="admin-form">
@@ -73,9 +73,9 @@
       <div class="admin-dashboard-heading">
         <div>
           <p class="section-label">GRIT BOXING</p>
-          <h1>Pengelolaan acara &amp; tiket</h1>
+          <h1>Dashboard Admin</h1>
           <p class="admin-intro">
-            Atur satu acara aktif, penjualan tiket, dan validasi kode tiket.
+            Pantau pembayaran dan kelola operasional GRIT Boxing.
           </p>
         </div>
 
@@ -84,133 +84,286 @@
         </button>
       </div>
 
+      <nav class="admin-navigation" aria-label="Navigasi dashboard admin">
+        <button class="admin-nav-link is-active" type="button" data-admin-page="overview" aria-current="page">
+          Ringkasan
+        </button>
+        <button class="admin-nav-link" type="button" data-admin-page="verify">
+          Validasi Tiket
+        </button>
+        <button class="admin-nav-link" type="button" data-admin-page="tickets">
+          Tiket
+        </button>
+        <button class="admin-nav-link" type="button" data-admin-page="event">
+          Acara
+        </button>
+        <button class="admin-nav-link" type="button" data-admin-page="fight-cards">
+          Fight Card
+        </button>
+        <button class="admin-nav-link" type="button" data-admin-page="sponsors">
+          Logo Sponsor
+        </button>
+      </nav>
+
       <div class="admin-notice" id="adminDashboardMessage" aria-live="polite"></div>
 
-      <section class="admin-panel">
-        <div class="admin-panel-heading">
+      <section class="admin-page" data-admin-page-content="overview">
+        <div class="admin-page-heading">
+          <div>
+            <p class="section-label">PEMBAYARAN</p>
+            <h2>Ringkasan transaksi</h2>
+            <p class="admin-intro">Data pembayaran yang sudah dikonfirmasi Midtrans.</p>
+          </div>
+          <label class="admin-range-label">
+            Periode
+            <select id="adminSummaryRange">
+              <option value="7">7 hari terakhir</option>
+              <option value="30">30 hari terakhir</option>
+              <option value="90">90 hari terakhir</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="admin-summary-grid">
+          <article class="admin-stat-card">
+            <span>Total omzet terkonfirmasi</span>
+            <strong id="summaryRevenue">Memuat...</strong>
+            <small>Transaksi settlement</small>
+          </article>
+          <article class="admin-stat-card">
+            <span>Transaksi berhasil</span>
+            <strong id="summaryTransactions">—</strong>
+            <small>Dalam periode terpilih</small>
+          </article>
+          <article class="admin-stat-card">
+            <span>Tiket terbit</span>
+            <strong id="summaryTickets">—</strong>
+            <small>Tiket dari pembayaran berhasil</small>
+          </article>
+          <article class="admin-stat-card">
+            <span>Menunggu pembayaran</span>
+            <strong id="summaryPending">—</strong>
+            <small>Transaksi pending</small>
+          </article>
+        </div>
+
+        <div class="admin-chart-grid">
+          <section class="admin-panel admin-chart-panel">
+            <div class="admin-panel-heading">
+              <div>
+                <p class="section-label">TREN PEMBAYARAN</p>
+                <h3>Omzet per hari</h3>
+              </div>
+            </div>
+            <div class="admin-revenue-chart" id="adminRevenueChart" aria-label="Grafik omzet per hari">
+              <p class="admin-chart-empty">Memuat data transaksi...</p>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-chart-panel">
+            <div class="admin-panel-heading">
+              <div>
+                <p class="section-label">METODE PEMBAYARAN</p>
+                <h3>Transaksi berdasarkan metode</h3>
+              </div>
+            </div>
+            <div class="admin-method-chart">
+              <div class="admin-donut" id="adminPaymentDonut" role="img" aria-label="Grafik metode pembayaran"></div>
+              <div class="admin-method-legend" id="adminPaymentLegend"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-page" data-admin-page-content="verify" hidden>
+        <div class="admin-page-heading">
+          <div>
+            <p class="section-label">PINTU MASUK</p>
+            <h2>Validasi tiket</h2>
+            <p class="admin-intro">Periksa kode tiket sebelum peserta masuk ke acara.</p>
+          </div>
+        </div>
+
+        <section class="admin-panel">
+          <form id="verifyTicketForm" class="admin-verify-form">
+            <label>
+              Kode tiket
+              <input name="code" type="text" maxlength="40" placeholder="GRIT-XXXXXXXXXXXXXXXX" required>
+            </label>
+            <button class="btn btn-dark" id="verifyTicketButton" type="submit">
+              Cek kode
+            </button>
+          </form>
+          <div class="admin-verification-result" id="verifyTicketResult" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section class="admin-page" data-admin-page-content="tickets" hidden>
+        <div class="admin-page-heading">
+          <div>
+            <p class="section-label">JENIS TIKET</p>
+            <h2>Kelola tiket</h2>
+            <p class="admin-intro">Tambah tiket atau perbarui harga, stok, dan status penjualan.</p>
+          </div>
+        </div>
+
+        <section class="admin-panel">
+          <div class="admin-panel-heading">
+            <div>
+              <p class="section-label">TIKET BARU</p>
+              <h3>Tambah jenis tiket</h3>
+            </div>
+          </div>
+
+          <form id="adminTicketCreateForm" class="admin-form admin-create-form">
+            <label>
+              Kategori
+              <select name="categoryId" id="ticketCategorySelect" required></select>
+            </label>
+
+            <label>
+              Nama tiket
+              <input name="name" type="text" maxlength="80" required>
+            </label>
+
+            <label>
+              Harga (Rupiah)
+              <input name="price" type="number" min="1" max="999999999" step="1" required>
+            </label>
+
+            <label>
+              Stok
+              <input name="stock" type="number" min="0" max="1000000" step="1" value="0" required>
+            </label>
+
+            <label class="field-wide">
+              Deskripsi
+              <textarea name="description" maxlength="500"></textarea>
+            </label>
+
+            <div class="admin-ticket-actions field-wide">
+              <button class="btn btn-dark" id="createTicketButton" type="submit">
+                Tambah jenis tiket
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <div class="admin-ticket-list" id="adminTicketList">
+          <div class="admin-loading">
+            <span class="spinner" aria-hidden="true"></span>
+            Memuat tiket...
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-page" data-admin-page-content="event" hidden>
+        <div class="admin-page-heading">
           <div>
             <p class="section-label">ACARA AKTIF</p>
-            <h2>Informasi acara</h2>
+            <h2>Kelola acara</h2>
+            <p class="admin-intro">Atur detail acara dan buka atau tutup penjualan tiket.</p>
           </div>
           <p class="admin-event-state" id="adminEventState">Belum ada acara</p>
         </div>
 
-        <form id="adminEventForm" class="admin-form admin-event-form">
-          <label>
-            Nama acara
-            <input name="name" type="text" maxlength="120">
-          </label>
+        <section class="admin-panel">
+          <form id="adminEventForm" class="admin-form admin-event-form">
+            <label>
+              Nama acara
+              <input name="name" type="text" maxlength="120">
+            </label>
 
-          <label>
-            Lokasi
-            <input name="location" type="text" maxlength="200">
-          </label>
+            <label>
+              Lokasi
+              <input name="location" type="text" maxlength="200">
+            </label>
 
-          <label>
-            Mulai
-            <input name="startAt" type="datetime-local">
-          </label>
+            <label>
+              Mulai
+              <input name="startAt" type="datetime-local">
+            </label>
 
-          <label>
-            Selesai / masa berlaku tiket
-            <input name="endAt" type="datetime-local">
-          </label>
+            <label>
+              Selesai / masa berlaku tiket
+              <input name="endAt" type="datetime-local">
+            </label>
 
-          <label class="field-wide">
-            Deskripsi acara
-            <textarea name="description" maxlength="1000"></textarea>
-          </label>
+            <label class="field-wide">
+              Deskripsi acara
+              <textarea name="description" maxlength="1000"></textarea>
+            </label>
 
-          <label class="field-wide">
-            Tautan Google Maps (opsional)
-            <input name="mapUrl" type="url" maxlength="500" placeholder="https://maps.google.com/...">
-          </label>
+            <label class="field-wide">
+              Tautan Google Maps (opsional)
+              <input name="mapUrl" type="url" maxlength="500" placeholder="https://maps.google.com/...">
+            </label>
 
-          <label class="admin-checkbox field-wide">
-            <input name="salesOpen" type="checkbox">
-            Buka penjualan tiket untuk acara ini
-          </label>
+            <label class="admin-checkbox field-wide">
+              <input name="salesOpen" type="checkbox">
+              Buka penjualan tiket untuk acara ini
+            </label>
 
-          <div class="admin-ticket-actions field-wide">
-            <button class="btn btn-dark" id="saveEventButton" type="submit">
-              Simpan acara
-            </button>
-          </div>
-        </form>
-        <p class="admin-help">
-          Jika belum ada acara, kosongkan nama, lokasi, dan jadwal lalu simpan.
-          Penjualan otomatis tertutup setelah waktu acara berakhir.
-        </p>
+            <div class="admin-ticket-actions field-wide">
+              <button class="btn btn-dark" id="saveEventButton" type="submit">
+                Simpan acara
+              </button>
+            </div>
+          </form>
+          <p class="admin-help">
+            Jika belum ada acara, kosongkan nama, lokasi, dan jadwal lalu simpan.
+            Penjualan otomatis tertutup setelah waktu acara berakhir.
+          </p>
+        </section>
       </section>
 
-      <section class="admin-panel">
-        <div class="admin-panel-heading">
+      <section class="admin-page" data-admin-page-content="fight-cards" hidden>
+        <div class="admin-page-heading">
           <div>
-            <p class="section-label">JENIS TIKET</p>
-            <h2>Tambah tiket</h2>
+            <p class="section-label">PERTANDINGAN</p>
+            <h2>Kelola Fight Card</h2>
+            <p class="admin-intro">
+              Atur foto fighter, nama, dan kelas pertandingan yang tampil di website.
+            </p>
           </div>
         </div>
 
-        <form id="adminTicketCreateForm" class="admin-form admin-create-form">
-          <label>
-            Kategori
-            <select name="categoryId" id="ticketCategorySelect" required></select>
-          </label>
-
-          <label>
-            Nama tiket
-            <input name="name" type="text" maxlength="80" required>
-          </label>
-
-          <label>
-            Harga (Rupiah)
-            <input name="price" type="number" min="1" max="999999999" step="1" required>
-          </label>
-
-          <label>
-            Stok
-            <input name="stock" type="number" min="0" max="1000000" step="1" value="0" required>
-          </label>
-
-          <label class="field-wide">
-            Deskripsi
-            <textarea name="description" maxlength="500"></textarea>
-          </label>
-
-          <div class="admin-ticket-actions field-wide">
-            <button class="btn btn-dark" id="createTicketButton" type="submit">
-              Tambah jenis tiket
+        <form class="admin-form admin-site-content-form" id="adminFightCardForm">
+          <div class="admin-site-item-list" id="adminFightCardList"></div>
+          <div class="admin-site-actions">
+            <button class="btn btn-light" id="addFightCardButton" type="button">
+              Tambah pertandingan
+            </button>
+            <button class="btn btn-dark" id="saveFightCardsButton" type="submit">
+              Simpan Fight Card
             </button>
           </div>
         </form>
       </section>
 
-      <section class="admin-panel">
-        <div class="admin-panel-heading">
+      <section class="admin-page" data-admin-page-content="sponsors" hidden>
+        <div class="admin-page-heading">
           <div>
-            <p class="section-label">VALIDASI MASUK</p>
-            <h2>Cek kode tiket</h2>
+            <p class="section-label">PARTNER KAMI</p>
+            <h2>Kelola logo sponsor</h2>
+            <p class="admin-intro">
+              Unggah, tambah, atau hapus logo sponsor yang tampil di website.
+            </p>
           </div>
         </div>
 
-        <form id="verifyTicketForm" class="admin-verify-form">
-          <label>
-            Kode tiket
-            <input name="code" type="text" maxlength="40" placeholder="GRIT-XXXXXXXXXXXXXXXX" required>
-          </label>
-          <button class="btn btn-dark" id="verifyTicketButton" type="submit">
-            Cek kode
-          </button>
+        <form class="admin-form admin-site-content-form" id="adminSponsorForm">
+          <div class="admin-site-item-list" id="adminSponsorList"></div>
+          <div class="admin-site-actions">
+            <button class="btn btn-light" id="addSponsorButton" type="button">
+              Tambah sponsor
+            </button>
+            <button class="btn btn-dark" id="saveSponsorsButton" type="submit">
+              Simpan logo sponsor
+            </button>
+          </div>
         </form>
-        <div class="admin-verification-result" id="verifyTicketResult" aria-live="polite"></div>
       </section>
-
-      <div class="admin-ticket-list" id="adminTicketList">
-        <div class="admin-loading">
-          <span class="spinner" aria-hidden="true"></span>
-          Memuat tiket...
-        </div>
-      </div>
     </section>
   </main>
 

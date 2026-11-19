@@ -62,6 +62,11 @@ kode tiket dan mengurangi stok satu kali; notifikasi Midtrans berulang tidak
 menerbitkan tiket baru atau mengurangi stok lagi. Kode tiket disimpan sebelum
 pengiriman email, jadi kegagalan SMTP tidak menghilangkan tiket tersebut.
 
+Menu **Fight Card** mengatur foto, nama fighter, dan kelas pertandingan.
+Menu **Logo Sponsor** dapat menambah, mengganti, atau menghapus logo. Gambar
+PNG, JPG, atau WebP maksimal 2 MB disimpan di PostgreSQL bersama data website,
+sehingga tetap tersedia setelah deployment Vercel.
+
 Untuk menemukan kode terbaru lewat Neon SQL Editor:
 
 ```sql
@@ -82,6 +87,9 @@ environment variables dari `backend/.env` melalui **Project Settings →
 Environment Variables**; jangan commit `.env`. Setelah deployment, website dan
 admin berjalan pada domain Vercel yang sama, dan `frontend/config.js`
 otomatis memakai API same-origin. Health check tersedia di `/api/health`.
+Ringkasan admin menghitung transaksi settlement dan metode pembayaran dari
+database, yang diperbarui setelah webhook Midtrans terverifikasi. Ringkasan ini
+tidak memakai endpoint analitik privat dashboard Midtrans.
 
 Atur URL Payment Notification Midtrans ke
 `https://<domain-vercel>/api/midtrans/webhook`. Midtrans tidak dapat mengakses
