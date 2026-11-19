@@ -4,6 +4,7 @@ require("dotenv").config({
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const { Pool } = require("pg");
 const midtransClient = require("midtrans-client");
 const crypto = require("crypto");
@@ -24,6 +25,39 @@ const pool = process.env.DATABASE_URL
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "..", "frontend")));
+app.use(
+  "/images",
+  express.static(path.join(__dirname, "..", "images"))
+);
+
+let databaseInitialization;
+
+function initializeDatabase() {
+  if (!pool) {
+    return Promise.resolve();
+  }
+  if (!databaseInitialization) {
+    databaseInitialization = ensureOrdersTable().catch(error => {
+      databaseInitialization = null;
+      throw error;
+    });
+  }
+  return databaseInitialization;
+}
+
+app.use(async (req, res, next) => {
+  try {
+    await initializeDatabase();
+    next();
+  } catch (error) {
+    console.error("Gagal menyiapkan database untuk request:", error);
+    res.status(503).json({
+      success: false,
+      message: "Database belum siap. Silakan coba beberapa saat lagi."
+    });
+  }
+});
 
 const defaultEventData = {
   name: "",
@@ -411,6 +445,13 @@ async function ensureOrdersTable() {
 }
 
 app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Backend GRIT Boxing ID berhasil berjalan"
+  });
+});
+
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     message: "Backend GRIT Boxing ID berhasil berjalan"
@@ -1460,7 +1501,7 @@ app.post("/api/midtrans/webhook", async (req, res) => {
 async function startServer() {
   if (pool) {
     try {
-      await ensureOrdersTable();
+      await initializeDatabase();
     } catch (error) {
       console.error("Gagal menyiapkan tabel orders:", error);
     }
@@ -1473,4 +1514,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
